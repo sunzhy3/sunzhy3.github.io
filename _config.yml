@@ -4,7 +4,7 @@ permalink:           pretty
 # Setup
 title:               主页 #Poole
 tagline:             sunzhy3 #The Jekyll Butler
-url:                 http://getpoole.com
+url:                 https://sunzhy3.github.io #http://getpoole.com
 paginate:            1
 baseurl:             ""
 
