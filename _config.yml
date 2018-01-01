@@ -2,8 +2,8 @@
 permalink:           pretty
 
 # Setup
-title:               Poole
-tagline:             The Jekyll Butler
+title:               主页 #Poole
+tagline:             sunzhy3 #The Jekyll Butler
 url:                 http://getpoole.com
 paginate:            1
 baseurl:             ""
