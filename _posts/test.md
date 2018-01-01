@@ -1,0 +1,122 @@
+﻿---
+    author: kresnikwang
+    comments: true
+    date: 2015-04-28 17:42:32+00:00
+    layout: post
+    title: PHP, Angular JS Development|My Export Quote|农产品出口工具开发
+    categories:
+    - Works
+    - Tech
+    tags:
+    - bootstrap
+    - javascript
+    - php
+    - AngularJS
+    ---
+
+作者：知乎用户
+链接：https://www.zhihu.com/question/23934523/answer/50518023
+来源：知乎
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+# Minimum Barrier Salient Object Detection at 80 FPS
+
+---
+作者为 Jianming Zhang 和 Stan Sclaroff 文章发表在2015年的ICCV, [项目主页](http://www.cs.bu.edu/groups/ivc/fastMBD/)
+## 1. Introduction
+略
+
+---
+## 2. Related Work
+由于显著性区域一般被认为是比较特殊的与背景相区分开的区域所以
+显著性目标检测主要为了强调有比较明确边界的显著区域，
+所以许多显著性方法结合了高级的先验知识, 如图像边界先验： 目标表现上的不相似， 与图像边界的连接较少. 其他的方法如基于扩散架构， 低秩矩阵， 马尔科夫随机移动。基于机器学习的方法需要离线学习并且速度一般很慢。
+一些加速方法利用像素级别的颜色对比， 图像下采样（会影响显著性计算）等
+
+---
+## 3. Fast Approximate MBD Transform
+ 
+### 3.1 Background： Distance Transform
+$I$ 为一个2D单通道图像, $\pi = <\pi(0), ..., \pi(k)>$ 为 $I$ 上的一个路径即一串连续相邻的像素, $S$ 种子集合, $F$ 为代价函数, $t$表示像素, 本文考虑4近邻,给定了 $F$ 和 $S$ 距离变换需要计算一个距离图D
+$$
+D(t) = \min_{\pi \in \Pi_{S, t}} F(\pi), (1)
+$$
+$\Pi_{S, t}$ 是连接 $S$ 和 $t$ 的所有路径
+geodesic距离的路径损失函数定义为
+$$
+\sum_{I}(\pi)=\sum_{i= 1}^{k}|I(\pi(i- 1)) - I(\pi(i))|,\hspace{1cm} (2)
+$$
+Minimum Barrier Distance(MBD)的路径损失函数定义为
+$$
+\beta_{I}(\pi) = \max_{i=0}^{k}I(\pi(i)) - \min_{i=0}^{k}I(\pi(i)),\hspace{1cm} (3)
+$$
+但精确的MBD变换的时间复杂度为$O(mn\log n)$
+n为图像中的像素数, m为图像中不同像素值的数量, 实际中300*200的图像大概需要半秒钟
+
+### 3.2 Fast MBD Transform by Raster Scan
+由于实际中少数的迭代就可以收敛到一个不错的结果, FastMBD大概可以看做线性时间复杂度并且对内存友好
+在扫描中我们需要采用光栅扫描或者反向光栅扫描, 在特定扫描下x邻居中一半的近邻y将会用来最小化路径代价
+$$
+D(x) \leftarrow \min
+\begin{cases}
+&\text{D(x)}\\
+&\text{$\beta_{I}(P(y)\cdot\langle y, x\rangle)$}
+\end{cases}, \hspace{1cm} (4)
+$$
+$P(y)$ 为当前连接到y的路径, $\langle y, x \rangle$ 为从y到x的边缘, 用 $P_{y}(x)$ 表示 $P(y)\cdot\langle y, x\rangle)$ 为包含y到x边缘的到x的路径
+$$
+\beta_{I}(P_{y}(x)) = \max\{U(y), I(x)\} - \min\{L(y), I(x)\},\hspace{1cm} (5)
+$$
+$U(y)$ 和 $L(y)$ 是 $P(y)$ 上最大的和最小的像素值.
+之后我们根据Alg1和Alg2来进行迭代, 根据路径的变化不断的更新 $U$ 和 $L$ 最后获得收敛的解
+
+### 3.3 Approximation Error Analysis
+理论和实践上分析了FastMBD是可以在有限的迭代次数下收敛的
+
+---
+
+## 4. Minimum Barrier Salient Object Detection
+
+### 4.1 MBD Transform for Salient Object Detection
+对输入图像的每个通道进行FastMBD变换之后将结果相加形成一个MBD图 $B$ , 之后将这个图归一化
+其中FastMBD只进行三次迭代, 由图4可以看出, MBD不会有小权值累加问题所以目标更加明确
+
+### 4.2 Combination with Background Cue
+采用了一个附加线索即图像背景和边缘部分的表现相似来提升效果
+计算一个Image Boundary Contrast(IBC)图, 先将图片边界分成上下左右四个部分, 每个区域 $r$ 个像素宽, 对于 $k \in \{1, 2, 3, 4\}$ 四个区域
+计算平均颜色 $\overline{x_{k}} = [\overline{x_{1}}, \overline{x_{2}}, \overline{x_{3}}]$,
+计算协方差矩阵 $Q_{k} = [q_{ij}]_{3 \times 3}$,
+基于马氏距离计算IBC图 $U_{k} = [u_{k}^{ij}]_{W \times H}$
+$$
+u_{k}^{ij} = \sqrt{(x_{k}^{ij} - \overline{x})Q^{-1}(x_{k}^{ij} - \overline{x})^{T}},\hspace{1cm} (7)
+$$
+之后对$U_{k}$归一化, 再计算最后的IBC图$U$
+$$
+u^{ij} = (\sum_{k = 1}^{4}u_{k}^{ij}) - \max_{k}u_{k}^{ij},\hspace{1cm} (8)
+$$
+定义 $B^{+} = B + U$, 为附加后的图
+
+### 4.3 Post-processing
+1. 为了保持边界的同时平滑$S$, 进行膨胀重建和腐蚀重建两个形态学操作, 核函数尺寸为$\delta$
+$$
+\delta = \alpha\sqrt{s}, \hspace{1cm}(9)
+$$
+其中 $\alpha$ 为预定义的常数, $s$ 为图 $B$ 的像素平均值
+2. 与一个中心偏离图 $C = [c^{ij}]_{W \times H}$ 像素相乘
+$$
+c_{ij} = 1 - \frac{\sqrt{(i - \frac{H}{2})^{2} + (j - \frac{H}{2})^{2}}}{\sqrt{(\frac{H}{2})^{2} + (\frac{H}{2})^{2}}}, (10)
+$$
+3. 对 $S$ 进行归一化增加前景和背景的对比度
+$$
+f(x) = \frac{1}{1 + e^{-b(x - 0.5)}}, (11)
+$$
+
+## 5. Experiments
+略
+### 5.4 Limitations
+对于目标与边界连接的情况处理的不好
+
+## 6. Conclusion
+速度很快达到80FPS, 并且达到目前最好的效果
+
+
+
